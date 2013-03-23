@@ -2,7 +2,11 @@
 TO DO
 =====
 
-Implement parse
+Test parse
+
+Come up with a way to attach PInfo nodes
+
+Improve error messages
 
 Make a BNF generator
 
