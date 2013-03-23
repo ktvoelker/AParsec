@@ -1,10 +1,10 @@
 
-name:           AParsec
+name:           applicative-parsec
 version:        0.0.1
 cabal-version:  >= 1.10
 build-type:     Simple
 license:        GPL-3
-license-file:   LICENSE.txt
+license-file:   LICENSE
 copyright:      (c) 2013 Karl Voelker
 author:         Karl Voelker
 maintainer:     ktvoelker@gmail.com
@@ -26,6 +26,9 @@ Library
   build-depends:
     base                 >= 4    && < 5,
     mtl                  >= 2.1  && < 2.2
+  exposed-modules:
+    Text.Parsec.Applicative
+  other-modules:
   default-extensions:
     TupleSections
     GADTs
