@@ -23,13 +23,11 @@ data Parser tt td a where
 
 instance Functor (Parser tt td) where
   fmap = PApp . PConst
-  (<$) = flip PSkip . PConst
 
 instance Applicative (Parser tt td) where
   pure  = PConst
   (<*>) = PApp
   (*>)  = PSkip
-  (<*)  = flip PSkip
 
 instance Alternative (Parser tt td) where
   empty  = PFail Nothing
@@ -43,7 +41,10 @@ eof = PEnd
 token :: (Eq tt, Enum tt, Bounded tt) => [tt] -> Parser tt td (tt, td)
 token = PToken
 
+try = PTry
+
 data ParseError = ParseError
+  deriving (Show)
 
 instance Error ParseError where
   noMsg    = ParseError
