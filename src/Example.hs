@@ -4,10 +4,12 @@ module Example where
 import Control.Applicative
 import Data.Functor
 import Data.Maybe
+
 import Text.Parsec.Applicative
+import Text.Parsec.Applicative.BNF
 
 data TT = TTInt | TTPlus | TTMult | TTLP | TTRP
-  deriving (Eq, Enum, Bounded)
+  deriving (Eq, Enum, Bounded, Show)
 
 type TD = Maybe Integer
 
@@ -28,4 +30,6 @@ expr =
   where
     f e Nothing = e
     f e1 (Just e2) = Plus e1 e2
+
+bnf = parserToBNF expr
 

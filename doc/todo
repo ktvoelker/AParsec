@@ -1,0 +1,20 @@
+
+TO DO
+=====
+
+Implement the BNF generator
+
+  We need to bring in the idea from Control.Applicative.Depth: the PInfo node is
+  very important, and should probably be called something like PLabel. It is what
+  makes all of this cool stuff possible - you put a PLabel at the top of any
+  non-terminal, but definitely at the top of any recursive non-terminal, in order to
+  provide the library with a way of finding the recursion.
+
+  Also, BNF needs names for things to make sense! So actually, the whole
+  parserToBNF project should require that the top-level node be PLabel (or some other
+  innocuous thing that contains a PLabel near the top).
+
+Come up with a good syntactic way to attach PLabel nodes
+
+Improve error messages
+
