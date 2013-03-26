@@ -2,9 +2,11 @@
 TO DO
 =====
 
-Debug the BNF generator
+Implement the BNF flattener
 
-Come up with a good syntactic way to attach PLabel nodes
+Add nice output formatting for the BNF
+
+Test the BNF generator
 
 Improve error messages
 

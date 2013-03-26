@@ -40,8 +40,12 @@ parserToBNF :: Parser tt td a -> BNF tt
 parserToBNF =
   Map.fromList
   . catMaybes
-  . map (\(xs, p) -> (xs,) <$> ce p)
+  . map (\(xs, p) -> (xs,) . flatten <$> ce p)
   . nonTerminals []
+
+flatten :: BNFExp t -> BNFExp t
+-- TODO
+flatten = id
 
 ce :: Parser tt td a -> Maybe (BNFExp tt)
 ce PEnd = Just EOF
@@ -49,23 +53,11 @@ ce (PConst _) = Nothing
 ce (PToken []) = Nothing
 ce (PToken [t]) = Just (Token t)
 ce (PToken ts) = Just . Alt . map Token $ ts
-ce (PSkip _ p) = ce p
-ce (PApp f p) = case (ce f, ce p) of
-  (Nothing, y) -> y
-  (x, Nothing) -> x
-  (Just (Seq xs), Just (Seq ys)) -> Just . Seq $ xs ++ ys
-  (Just (Seq xs), Just y) -> Just . Seq $ xs ++ [y]
-  (Just x, Just (Seq ys)) -> Just . Seq $ [x] ++ ys
-  (Just x, Just y) -> Just $ Seq [x, y]
+ce (PSkip p q) = Just . Seq . catMaybes $ [ce p, ce q]
+ce (PApp f p) = Just . Seq . catMaybes $ [ce f, ce p]
 ce (PTry p) = ce p
 ce (PRepeat p) = Rep <$> ce p
 ce (PFail _) = Nothing
-ce (PChoice p q) = case (ce p, ce q) of
-  (Nothing, y) -> y
-  (x, Nothing) -> x
-  (Just (Alt xs), Just (Alt ys)) -> Just . Alt $ xs ++ ys
-  (Just (Alt xs), Just y) -> Just . Alt $ xs ++ [y]
-  (Just x, Just (Alt ys)) -> Just . Alt $ [x] ++ ys
-  (Just x, Just y) -> Just $ Alt [x, y]
+ce (PChoice f p) = Just . Alt . catMaybes $ [ce f, ce p]
 ce (PLabel xs _) = Just $ Ref xs
 
