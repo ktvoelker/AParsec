@@ -6,6 +6,7 @@ module Text.Parsec.Applicative
   , eof
   , token
   , try
+  , label
   ) where
 
 import Control.Applicative

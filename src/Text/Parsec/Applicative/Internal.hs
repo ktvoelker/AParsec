@@ -22,7 +22,7 @@ data Parser tt td a where
   PRepeat :: Parser tt td a -> Parser tt td [a]
   PFail   :: Maybe String -> Parser tt td a
   PChoice :: Parser tt td a -> Parser tt td a -> Parser tt td a
-  PInfo   :: String -> Parser tt td a -> Parser tt td a
+  PLabel  :: String -> Parser tt td a -> Parser tt td a
 
 instance Functor (Parser tt td) where
   fmap = PApp . PConst
@@ -45,6 +45,8 @@ token :: (Eq tt, Enum tt, Bounded tt) => [tt] -> Parser tt td (tt, td)
 token = PToken
 
 try = PTry
+
+label = PLabel
 
 data ParseError = ParseError
   deriving (Show)
@@ -103,4 +105,4 @@ mp (PChoice p1 p2) = do
     -- TODO if p2 throws an error, there might be some merging to do with p1's error
     False -> mp p2
 -- TODO simplify error messages that bubble up through here
-mp (PInfo _ p) = mp p
+mp (PLabel _ p) = mp p
