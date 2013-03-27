@@ -15,7 +15,7 @@ import Text.Parsec.Applicative.Types
 data Parser tt td a where
   PEnd    :: Parser tt td ()
   PConst  :: a -> Parser tt td a
-  PToken  :: [tt] -> Parser tt td (tt, td)
+  PToken  :: tt -> Parser tt td (tt, td)
   PSkip   :: Parser tt td a -> Parser tt td b -> Parser tt td b
   PApp    :: Parser tt td (a -> b) -> Parser tt td a -> Parser tt td b
   PTry    :: Parser tt td a -> Parser tt td a
@@ -41,7 +41,7 @@ instance Alternative (Parser tt td) where
 eof :: Parser tt td ()
 eof = PEnd
 
-token :: (Eq tt, Enum tt, Bounded tt) => [tt] -> Parser tt td (tt, td)
+token :: (Eq tt) => tt -> Parser tt td (tt, td)
 token = PToken
 
 try = PTry
@@ -56,7 +56,7 @@ instance Error ParseError where
   strMsg _ = ParseError
 
 parse
-  :: (Eq tt, Enum tt, Bounded tt)
+  :: (Eq tt)
   => Parser tt td a -> [(tt, td)] -> Either ParseError a
 parse p = evalState (runErrorT $ mp p) . emptyParseState
 
@@ -69,14 +69,13 @@ localConsumption p = do
 
 type M tt td = ErrorT ParseError (State (ParseState tt td))
 
-mp :: (Eq tt, Enum tt, Bounded tt) => Parser tt td a -> M tt td a
+mp :: (Eq tt) => Parser tt td a -> M tt td a
 mp PEnd = access psTokens >>= \case
   [] -> return ()
   _ -> throwError ParseError
 mp (PConst x) = return x
-mp (PToken tts) = access psTokens >>= \case
-  [] -> throwError ParseError
-  (t@(tt, _) : ts) | tt `elem` tts -> psTokens ~= ts >> return t
+mp (PToken exp) = access psTokens >>= \case
+  t@(act, _) : ts | exp == act -> psTokens ~= ts >> return t
   _ -> throwError ParseError
 mp (PSkip p1 p2) = mp p1 >> mp p2
 mp (PApp f a) = mp f <*> mp a

@@ -2,11 +2,7 @@
 TO DO
 =====
 
-Implement the BNF flattener
-
-Add nice output formatting for the BNF
-
-Test the BNF generator
+Add a nice Show instance to the example token type
 
 Improve error messages
 
