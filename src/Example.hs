@@ -9,7 +9,14 @@ import Text.Parsec.Applicative
 import Text.Parsec.Applicative.BNF
 
 data TT = TTInt | TTPlus | TTMult | TTLP | TTRP
-  deriving (Eq, Enum, Bounded, Show)
+  deriving (Eq, Enum, Bounded)
+
+instance Show TT where
+  showsPrec _ TTInt  = ("INT" ++)
+  showsPrec _ TTPlus = ("'+'" ++)
+  showsPrec _ TTMult = ("'*'" ++)
+  showsPrec _ TTLP   = ("'('" ++)
+  showsPrec _ TTRP   = ("')'" ++)
 
 type TD = Maybe Integer
 
