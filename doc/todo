@@ -6,8 +6,9 @@ Write tests
 
 Improve error messages
 
-Can we have a Monad instance after all? With the labeled non-terminals, it might be
-possible
+Use non-terminal labels to simplify error messages
 
-Use non-terminal labels
+Use non-terminal labels to catch left recursion
+
+Can we have a Monad instance after all?
 
