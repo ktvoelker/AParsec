@@ -32,6 +32,9 @@ Library
     data-lens-template   >= 2.1  && < 2.2
   exposed-modules:
     Text.Parsec.Applicative
+    Text.Parsec.Applicative.BNF
+    Text.Parsec.Applicative.Internal
+    Text.Parsec.Applicative.Types
   other-modules:
   default-extensions:
     TupleSections
@@ -61,4 +64,6 @@ Test-Suite test
     ImpredicativeTypes
     RankNTypes
     LambdaCase
+    TypeSynonymInstances
+    FlexibleInstances
 

@@ -4,6 +4,16 @@ TO DO
 
 Write tests
 
+  Finish instance Arbitrary PrefixParser
+
+    Make a separate instance (with a newtype) for generating recursive parsers
+
+  Write some properties
+
+    A lot of these might have the form "given some arbitrary parsers Pi, combine them
+    with these different combinators in different ways to get some expected result
+    relative to each other"
+
 Improve error messages
 
 Use non-terminal labels to simplify error messages
