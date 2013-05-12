@@ -26,33 +26,20 @@ instance Monoid Extra where
 instance Arbitrary Extra where
   arbitrary = arbitraryBoundedEnum
 
-type StringParser = Parser Sigma Extra ()
+type P = Parser Sigma Extra Extra
 
-type PrefixParser = Parser Sigma Extra Extra
+newtype RecP = RecP { getP :: P }
 
-newtype RecStringParser = RecStringParser { getStringParser :: StringParser }
-
-newtype RecPrefixParser = RecPrefixParser { getPrefixParser :: PrefixParser }
-
-terminate :: Gen (Parser tt td a) -> Gen (Parser tt td ())
-terminate p = PSkip <$> p <*> pure PEnd
-
-instance Arbitrary StringParser where
-  arbitrary = terminate (arbitrary :: Gen PrefixParser)
-
-instance Arbitrary PrefixParser where
+instance Arbitrary P where
   arbitrary = arbitraryParser False
 
-instance Arbitrary RecStringParser where
-  arbitrary = RecStringParser <$> terminate (getPrefixParser <$> arbitrary)
+instance Arbitrary RecP where
+  arbitrary = RecP <$> arbitraryParser True
 
-instance Arbitrary RecPrefixParser where
-  arbitrary = RecPrefixParser <$> arbitraryParser True
-
-arbitraryParser :: Bool -> Gen PrefixParser
+arbitraryParser :: Bool -> Gen P
 arbitraryParser rec = sized $ arb rec
 
-arb :: Bool -> Int -> Gen PrefixParser
+arb :: Bool -> Int -> Gen P
 arb _ 0 = oneof
   [ (PEnd *>) . PConst <$> arbitrary
   , PConst <$> arbitrary
