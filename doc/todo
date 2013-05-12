@@ -4,15 +4,16 @@ TO DO
 
 Write tests
 
-  Finish instance Arbitrary PrefixParser
-
-    Make a separate instance (with a newtype) for generating recursive parsers
-
   Write some properties
-
     A lot of these might have the form "given some arbitrary parsers Pi, combine them
     with these different combinators in different ways to get some expected result
     relative to each other"
+
+  Use ReaderT to generate recursive parsers
+    There should be two different alternatives that generate PLabel
+      One generates a new label
+      The other returns a PLabel from the environment
+        This will involve some knot-tying
 
 Improve error messages
 
