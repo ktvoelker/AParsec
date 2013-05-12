@@ -59,6 +59,7 @@ Test-Suite test
   build-depends:
     base       >= 4   && < 5,
     QuickCheck >= 2.6 && < 2.7,
+    mtl        >= 2.1 && < 2.2,
     applicative-parsec
   default-extensions:
     ImpredicativeTypes
