@@ -2,6 +2,11 @@
 TO DO
 =====
 
+Write a function that tests for cases where PRepeat is applied to a parser that
+can accept the empty string
+
+  But first, just make a test for whether a parser can accept the empty string
+
 Write tests
 
   Write some properties

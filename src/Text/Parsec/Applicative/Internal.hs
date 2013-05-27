@@ -24,6 +24,28 @@ data Parser tt td a where
   PChoice :: Parser tt td a -> Parser tt td a -> Parser tt td a
   PLabel  :: String -> Parser tt td a -> Parser tt td a
 
+parens :: ShowS -> ShowS
+parens ss = ('(' :) . ss . (')' :)
+
+listed :: [ShowS] -> ShowS
+listed = parens . foldr (.) id . map1 ((' ' :) .)
+
+map1 :: (a -> a) -> [a] -> [a]
+map1 _ [] = []
+map1 f (x : xs) = x : map f xs
+
+instance (Show tt, Show td) => Show (Parser tt td a) where
+  showsPrec _ PEnd           = ("PEnd" ++)
+  showsPrec _ (PConst _)     = ("PConst" ++)
+  showsPrec p (PToken t)     = listed [("PToken" ++), showsPrec p t]
+  showsPrec p (PSkip a b)    = listed [("PSkip" ++), showsPrec p a, showsPrec p b]
+  showsPrec p (PApp a b)     = listed [("PApp" ++), showsPrec p a, showsPrec p b]
+  showsPrec p (PTry a)       = listed [("PTry" ++), showsPrec p a]
+  showsPrec p (PRepeat a)    = listed [("PRepeat" ++), showsPrec p a]
+  showsPrec _ (PFail _)      = ("PFail" ++)
+  showsPrec p (PChoice a b)  = listed [("PChoice" ++), showsPrec p a, showsPrec p b]
+  showsPrec p (PLabel xs a ) = listed [("PLabel" ++), (xs ++), showsPrec p a]
+
 instance Functor (Parser tt td) where
   fmap = PApp . PConst
 
@@ -49,7 +71,7 @@ try = PTry
 label = PLabel
 
 data ParseError = ParseError
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Error ParseError where
   noMsg    = ParseError
@@ -58,7 +80,23 @@ instance Error ParseError where
 parse
   :: (Eq tt)
   => Parser tt td a -> [(tt, td)] -> Either ParseError a
-parse p = evalState (runErrorT $ mp p) . emptyParseState
+parse = (fst .) . parse'
+
+parse'
+  :: (Eq tt)
+  => Parser tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
+parse' p =
+  (\(x, s) -> (x, psTokens ^$ s))
+  . runState (runErrorT $ mp p)
+  . emptyParseState
+
+accept :: (Eq tt) => Parser tt td a -> [(tt, td)] -> Bool
+accept = (either (const False) (const True) .) . parse
+
+accept' :: (Eq tt) => Parser tt td a -> [(tt, td)] -> Maybe ParseError
+accept' = (either Just (const Nothing) .) . parse
+
+infix 4 `accept`, `accept'`
 
 localConsumption :: M tt td a -> M tt td a
 localConsumption p = do
