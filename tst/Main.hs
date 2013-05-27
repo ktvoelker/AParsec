@@ -1,23 +1,20 @@
 
 module Main where
 
-import Data.Functor
-import Data.List
-import System.Exit
-import Test.QuickCheck.Test
+import Test.Framework (Test(), defaultMain, testGroup)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import qualified Test
 
-tests :: IO [Result]
-tests = mapM quickCheckResult [Test.empty]
+tests :: [Test]
+tests =
+  [ testGroup "Simple"
+    [ testProperty "Constant true" Test.prop_true
+    , testProperty "EOF matches only at the end" Test.prop_theEndIsTheEnd
+    , testProperty "Concatenation with (<*) and (*>)" Test.prop_skip
+    ]
+  ]
 
 main :: IO ()
-main = (partition isSuccess <$> tests) >>= \case
-  (ss, fs) -> do
-    let ns = length ss
-    let nf = length fs
-    putStrLn $ shows ns . (" passed; " ++) . shows nf . (" failed." ++) $ ""
-    case nf of
-      0 -> exitSuccess
-      _ -> exitFailure
+main = defaultMain tests
 

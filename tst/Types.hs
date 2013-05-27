@@ -7,12 +7,14 @@ import Test.QuickCheck
 import Text.Parsec.Applicative
 import Text.Parsec.Applicative.Internal
 
-data Sigma = A | B | C deriving (Eq, Ord, Enum, Bounded)
+type Tokens = [(Sigma, Extra)]
+
+data Sigma = A | B | C deriving (Eq, Ord, Enum, Bounded, Show)
 
 instance Arbitrary Sigma where
   arbitrary = arbitraryBoundedEnum
 
-data Extra = E | F | G deriving (Eq, Ord, Enum, Bounded)
+data Extra = E | F | G deriving (Eq, Ord, Enum, Bounded, Show)
 
 instance Monoid Extra where
   mempty = E

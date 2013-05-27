@@ -57,10 +57,12 @@ Test-Suite test
     -fno-warn-missing-signatures
     -fno-warn-orphans
   build-depends:
-    base       >= 4   && < 5,
-    QuickCheck >= 2.6 && < 2.7,
-    mtl        >= 2.1 && < 2.2,
-    applicative-parsec
+    base                       >= 4   && < 5,
+    mtl                        >= 2.1 && < 2.2,
+    QuickCheck                 >= 2.5 && < 2.6,
+    test-framework             >= 0.8 && < 0.9,
+    test-framework-quickcheck2 >= 0.3 && < 0.4,
+    applicative-parsec         == 0.0.1
   default-extensions:
     ImpredicativeTypes
     RankNTypes
