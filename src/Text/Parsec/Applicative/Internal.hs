@@ -7,6 +7,7 @@ module Text.Parsec.Applicative.Internal
 import Control.Applicative
 import Control.Monad.Error
 import Control.Monad.State
+import Control.Monad.Writer
 import Data.Lens
 import Data.Maybe
 
@@ -77,6 +78,11 @@ instance Error ParseError where
   noMsg    = ParseError
   strMsg _ = ParseError
 
+data ParserError =
+    ERepeatEmpty
+  | EUnknown
+  deriving (Eq, Show)
+
 parse
   :: (Eq tt)
   => Parser tt td a -> [(tt, td)] -> Either ParseError a
@@ -95,6 +101,25 @@ accept = (either (const False) (const True) .) . parse
 
 accept' :: (Eq tt) => Parser tt td a -> [(tt, td)] -> Maybe ParseError
 accept' = (either Just (const Nothing) .) . parse
+
+data Ex f = forall a. Ex (f a)
+
+acceptEmpty :: Ex (Parser tt td) -> Bool
+acceptEmpty (Ex PEnd) = True
+acceptEmpty (Ex (PConst _)) = True
+acceptEmpty (Ex (PToken _)) = False
+acceptEmpty (Ex (PSkip a b)) = all acceptEmpty [Ex a, Ex b]
+acceptEmpty (Ex (PApp a b)) = all acceptEmpty [Ex a, Ex b]
+acceptEmpty (Ex (PTry a)) = acceptEmpty (Ex a)
+acceptEmpty (Ex (PRepeat a)) = acceptEmpty (Ex a)
+acceptEmpty (Ex (PFail _)) = False
+acceptEmpty (Ex (PChoice a b)) = any acceptEmpty [Ex a, Ex b]
+acceptEmpty (Ex (PLabel _ a)) = acceptEmpty (Ex a)
+
+validate :: Parser tt td a -> [(ParserError, String)]
+validate = execWriter . f
+  where
+    f _ = undefined
 
 infix 4 `accept`, `accept'`
 

@@ -39,6 +39,7 @@ Library
   default-extensions:
     TupleSections
     GADTs
+    RankNTypes
     StandaloneDeriving
     LambdaCase
     ScopedTypeVariables
