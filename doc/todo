@@ -2,10 +2,7 @@
 TO DO
 =====
 
-Write a function that tests for cases where PRepeat is applied to a parser that
-can accept the empty string
-
-Upgrade acceptEmpty to handle recursive parsers
+The parsing of even a simple PRepeat never seems to terminate
 
 Write tests
 
@@ -24,7 +21,5 @@ Improve error messages
 
 Use non-terminal labels to simplify error messages
 
-Use non-terminal labels to catch left recursion
-
-Can we have a Monad instance after all?
+Implement validations as described in doc/validation
 

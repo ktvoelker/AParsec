@@ -1,0 +1,32 @@
+
+Grammar Validation
+==================
+
+Check that Fail only occurs at the beginning of an alternative
+
+  This could actually be encoded into the data structure...
+
+Check that Repeat is not applied to a parser that can accept Empty
+
+Check that nothing is accepted after End
+
+  Including another End
+
+Check for overlap between alternatives
+
+  The simplest form is to look for a later alternative that can never be accepted
+  because its language is a subset of an earlier alternative
+
+  One more subtle check is to see if there is a Repeat which is limited by previous
+  alternatives to accepting a finite number of repetitions (most likely zero)
+
+  Another subtle check is to see if there is some internal sub-alternative which can
+  never be accepted
+
+Check for directly-nested Repeats, or other cases where everything inside a Repeat
+could be Empty other than another Repeat
+
+Warn about directly-nested Try, because it's pointless and might indicate a problem
+
+Check for left-recursion, as indicated by the non-terminal labels
+

@@ -13,17 +13,17 @@ import Data.Maybe
 
 import Text.Parsec.Applicative.Types
 
-data Parser tt td a where
-  PEnd    :: Parser tt td ()
-  PConst  :: a -> Parser tt td a
-  PToken  :: tt -> Parser tt td (tt, td)
-  PSkip   :: Parser tt td a -> Parser tt td b -> Parser tt td b
-  PApp    :: Parser tt td (a -> b) -> Parser tt td a -> Parser tt td b
-  PTry    :: Parser tt td a -> Parser tt td a
-  PRepeat :: Parser tt td a -> Parser tt td [a]
-  PFail   :: Maybe String -> Parser tt td a
-  PChoice :: Parser tt td a -> Parser tt td a -> Parser tt td a
-  PLabel  :: String -> Parser tt td a -> Parser tt td a
+data Parser s tt td a where
+  PEnd    :: Parser s tt td ()
+  PConst  :: a -> Parser s tt td a
+  PToken  :: tt -> Parser s tt td (tt, td)
+  PSkip   :: Parser s tt td a -> Parser s tt td b -> Parser s tt td b
+  PApp    :: Parser s tt td (a -> b) -> Parser s tt td a -> Parser s tt td b
+  PTry    :: Parser s tt td a -> Parser s tt td a
+  PRepeat :: Parser s tt td a -> Parser s tt td [a]
+  PFail   :: Maybe String -> Parser s tt td a
+  PChoice :: Parser s tt td a -> Parser s tt td a -> Parser s tt td a
+  PLabel  :: s -> Parser s tt td a -> Parser s tt td a
 
 parens :: ShowS -> ShowS
 parens ss = ('(' :) . ss . (')' :)
@@ -35,7 +35,7 @@ map1 :: (a -> a) -> [a] -> [a]
 map1 _ [] = []
 map1 f (x : xs) = x : map f xs
 
-instance (Show tt, Show td) => Show (Parser tt td a) where
+instance (Show s, Show tt, Show td) => Show (Parser s tt td a) where
   showsPrec _ PEnd           = ("PEnd" ++)
   showsPrec _ (PConst _)     = ("PConst" ++)
   showsPrec p (PToken t)     = listed [("PToken" ++), showsPrec p t]
@@ -45,26 +45,26 @@ instance (Show tt, Show td) => Show (Parser tt td a) where
   showsPrec p (PRepeat a)    = listed [("PRepeat" ++), showsPrec p a]
   showsPrec _ (PFail _)      = ("PFail" ++)
   showsPrec p (PChoice a b)  = listed [("PChoice" ++), showsPrec p a, showsPrec p b]
-  showsPrec p (PLabel xs a ) = listed [("PLabel" ++), (xs ++), showsPrec p a]
+  showsPrec p (PLabel xs a ) = listed [("PLabel" ++), showsPrec p xs, showsPrec p a]
 
-instance Functor (Parser tt td) where
+instance Functor (Parser s tt td) where
   fmap = PApp . PConst
 
-instance Applicative (Parser tt td) where
+instance Applicative (Parser s tt td) where
   pure  = PConst
   (<*>) = PApp
   (*>)  = PSkip
 
-instance Alternative (Parser tt td) where
+instance Alternative (Parser s tt td) where
   empty  = PFail Nothing
   (<|>)  = PChoice
   some p = PApp (PApp (pure (:)) p) (PRepeat p)
   many p = PRepeat p
 
-eof :: Parser tt td ()
+eof :: Parser s tt td ()
 eof = PEnd
 
-token :: (Eq tt) => tt -> Parser tt td (tt, td)
+token :: (Eq tt) => tt -> Parser s tt td (tt, td)
 token = PToken
 
 try = PTry
@@ -85,26 +85,26 @@ data ParserError =
 
 parse
   :: (Eq tt)
-  => Parser tt td a -> [(tt, td)] -> Either ParseError a
+  => Parser s tt td a -> [(tt, td)] -> Either ParseError a
 parse = (fst .) . parse'
 
 parse'
   :: (Eq tt)
-  => Parser tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
+  => Parser s tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
 parse' p =
   (\(x, s) -> (x, psTokens ^$ s))
   . runState (runErrorT $ mp p)
   . emptyParseState
 
-accept :: (Eq tt) => Parser tt td a -> [(tt, td)] -> Bool
+accept :: (Eq tt) => Parser s tt td a -> [(tt, td)] -> Bool
 accept = (either (const False) (const True) .) . parse
 
-accept' :: (Eq tt) => Parser tt td a -> [(tt, td)] -> Maybe ParseError
+accept' :: (Eq tt) => Parser s tt td a -> [(tt, td)] -> Maybe ParseError
 accept' = (either Just (const Nothing) .) . parse
 
 data Ex f = forall a. Ex (f a)
 
-acceptEmpty :: Ex (Parser tt td) -> Bool
+acceptEmpty :: Ex (Parser s tt td) -> Bool
 acceptEmpty (Ex PEnd) = True
 acceptEmpty (Ex (PConst _)) = True
 acceptEmpty (Ex (PToken _)) = False
@@ -116,7 +116,7 @@ acceptEmpty (Ex (PFail _)) = False
 acceptEmpty (Ex (PChoice a b)) = any acceptEmpty [Ex a, Ex b]
 acceptEmpty (Ex (PLabel _ a)) = acceptEmpty (Ex a)
 
-validate :: Parser tt td a -> [(ParserError, String)]
+validate :: Parser s tt td a -> [(ParserError, String)]
 validate = execWriter . f
   where
     f _ = undefined
@@ -132,7 +132,7 @@ localConsumption p = do
 
 type M tt td = ErrorT ParseError (State (ParseState tt td))
 
-mp :: (Eq tt) => Parser tt td a -> M tt td a
+mp :: (Eq tt) => Parser s tt td a -> M tt td a
 mp PEnd = access psTokens >>= \case
   [] -> return ()
   _ -> throwError ParseError

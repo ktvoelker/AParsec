@@ -28,7 +28,7 @@ instance Monoid Extra where
 instance Arbitrary Extra where
   arbitrary = arbitraryBoundedEnum
 
-type P = Parser Sigma Extra Extra
+type P = Parser String Sigma Extra Extra
 
 newtype RecP = RecP { getP :: P }
 
