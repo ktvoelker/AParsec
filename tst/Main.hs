@@ -12,6 +12,8 @@ tests =
     [ testProperty "Constant true" Test.prop_true
     , testProperty "EOF matches only at the end" Test.prop_theEndIsTheEnd
     , testProperty "Concatenation with (<*) and (*>)" Test.prop_skip
+    , testProperty "Repeating a token" Test.prop_repeatToken
+    , testProperty "Repeating a token sequence" Test.prop_repeatTokens
     ]
   ]
 

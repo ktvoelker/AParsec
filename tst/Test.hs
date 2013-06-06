@@ -37,3 +37,14 @@ prop_skip p1 t1 p2 t2 =
     t12 = t1 ++ t2
     t21 = t2 ++ t1
 
+prop_repeatToken :: Int -> Sigma -> Bool
+prop_repeatToken reps tok = many (token tok) `accept` zip (r tok) (r ())
+  where
+    r = replicate reps
+
+prop_repeatTokens :: Int -> [Sigma] -> Bool
+prop_repeatTokens reps toks = p `accept` ts
+  where
+    p = many . sequenceA . map token $ toks
+    ts = zip (concat $ replicate reps toks) (repeat ())
+

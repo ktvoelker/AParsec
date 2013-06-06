@@ -9,7 +9,6 @@ import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Lens
-import Data.Maybe
 
 import Text.Parsec.Applicative.Types
 
@@ -91,10 +90,12 @@ parse = (fst .) . parse'
 parse'
   :: (Eq tt)
   => Parser s tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
-parse' p =
-  (\(x, s) -> (x, psTokens ^$ s))
-  . runState (runErrorT $ mp p)
-  . emptyParseState
+parse' p = (\(x, s) -> (x, psTokens ^$ s)) . runM (mp p)
+
+runM
+  :: (Eq tt)
+  => M tt td a -> [(tt, td)] -> (Either ParseError a, ParseState tt td)
+runM m = runState (runErrorT m) . emptyParseState
 
 accept :: (Eq tt) => Parser s tt td a -> [(tt, td)] -> Bool
 accept = (either (const False) (const True) .) . parse
@@ -147,10 +148,8 @@ mp (PTry p) = do
   catchError (mp p) $ \err -> do
     put ts
     throwError err
--- TODO this could be implemented in terms of PChoice
 mp (PRepeat p) =
-  fmap (catMaybes . takeWhile isJust)
-  . sequence
+  sequenceJust
   . repeat
   . localConsumption
   . catchError (Just <$> mp p)
@@ -168,3 +167,9 @@ mp (PChoice p1 p2) = do
     False -> mp p2
 -- TODO simplify error messages that bubble up through here
 mp (PLabel _ p) = mp p
+
+sequenceJust :: (Monad m) => [m (Maybe a)] -> m [a]
+sequenceJust [] = return []
+sequenceJust (x : xs) =
+  x >>= maybe (return []) ((sequenceJust xs >>=) . (return .) . (:))
+

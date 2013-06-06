@@ -1,6 +1,7 @@
 
 module Text.Parsec.Applicative
   ( module Control.Applicative
+  , module Data.Traversable
   , Parser()
   , ParseError(..)
   , eof
@@ -14,6 +15,7 @@ module Text.Parsec.Applicative
   ) where
 
 import Control.Applicative
+import Data.Traversable (Traversable(traverse, sequenceA), for, mapAccumL, mapAccumR)
 
 import Text.Parsec.Applicative.Internal
 

@@ -2,7 +2,9 @@
 TO DO
 =====
 
-The parsing of even a simple PRepeat never seems to terminate
+When PRepeat is supposed to fail cleanly (because it hasn't consumed anything in that
+iteration), the error is suppressed, and since we are sequencing errors and not maybes,
+the fact that there's a nothing doesn't stop the sequence
 
 Write tests
 
