@@ -17,6 +17,11 @@ Write tests
       The other returns a PLabel from the environment
         This will involve some knot-tying
 
+Enable compile-time validation via Template Haskell
+
+  There should be a template that splices in an empty list of decls on success,
+  or somehow provokes an error on failure
+
 Improve error messages
 
 Use non-terminal labels to simplify error messages

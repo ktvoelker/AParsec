@@ -30,3 +30,5 @@ Warn about directly-nested Try, because it's pointless and might indicate a prob
 
 Check for left-recursion, as indicated by the non-terminal labels
 
+Warn about recursive uses of Try
+
