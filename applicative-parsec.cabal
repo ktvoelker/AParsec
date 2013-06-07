@@ -35,6 +35,7 @@ Library
     Text.Parsec.Applicative.BNF
     Text.Parsec.Applicative.Internal
     Text.Parsec.Applicative.Types
+    Text.Parsec.Applicative.Util
   other-modules:
   default-extensions:
     TupleSections

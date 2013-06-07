@@ -5,6 +5,7 @@ import Test.QuickCheck.Gen (Gen())
 import Test.QuickCheck.Property
 
 import Text.Parsec.Applicative
+import Text.Parsec.Applicative.Util
 
 import Types
 
@@ -47,4 +48,12 @@ prop_repeatTokens reps toks = p `accept` ts
   where
     p = many . sequenceA . map token $ toks
     ts = zip (concat $ replicate reps toks) (repeat ())
+
+sequenceJustReference :: (Monad m) => [m (Maybe a)] -> m [a]
+sequenceJustReference [] = return []
+sequenceJustReference (x : xs) =
+  x >>= maybe (return []) ((sequenceJust xs >>=) . (return .) . (:))
+
+prop_sequenceJust :: [[Maybe Integer]] -> Bool
+prop_sequenceJust xs = sequenceJust xs == sequenceJustReference xs
 

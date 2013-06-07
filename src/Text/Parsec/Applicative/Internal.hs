@@ -11,6 +11,7 @@ import Control.Monad.Writer
 import Data.Lens
 
 import Text.Parsec.Applicative.Types
+import Text.Parsec.Applicative.Util
 
 data Parser s tt td a where
   PEnd    :: Parser s tt td ()
@@ -167,9 +168,4 @@ mp (PChoice p1 p2) = do
     False -> mp p2
 -- TODO simplify error messages that bubble up through here
 mp (PLabel _ p) = mp p
-
-sequenceJust :: (Monad m) => [m (Maybe a)] -> m [a]
-sequenceJust [] = return []
-sequenceJust (x : xs) =
-  x >>= maybe (return []) ((sequenceJust xs >>=) . (return .) . (:))
 
