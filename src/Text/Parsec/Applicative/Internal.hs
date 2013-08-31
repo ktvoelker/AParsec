@@ -11,7 +11,6 @@ import Control.Monad.Writer
 import Data.Lens
 
 import Text.Parsec.Applicative.Types
-import Text.Parsec.Applicative.Util
 
 data Parser s tt td a where
   PEnd    :: Parser s tt td ()
@@ -149,14 +148,7 @@ mp (PTry p) = do
   catchError (mp p) $ \err -> do
     put ts
     throwError err
-mp (PRepeat p) =
-  sequenceJust
-  . repeat
-  . localConsumption
-  . catchError (Just <$> mp p)
-  $ \err -> access psConsumed >>= \case
-    True  -> throwError err
-    False -> return Nothing
+mp (PRepeat p) = mp $ ((:) <$> p <*> PRepeat p) <|> PConst []
 mp (PFail Nothing) = throwError noMsg
 mp (PFail (Just xs)) = throwError $ strMsg xs
 mp (PChoice p1 p2) = do

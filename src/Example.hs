@@ -2,7 +2,6 @@
 module Example where
 
 import Control.Applicative
-import Data.Functor
 import Data.Maybe
 
 import Text.Parsec.Applicative

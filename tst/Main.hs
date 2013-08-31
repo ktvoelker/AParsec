@@ -28,7 +28,7 @@ main = getArgs >>= interpretArgsOrExit >>= defaultMainWithOpts tests . f
       { ropt_test_options
         = Just $ (maybe mempty id $ ropt_test_options ro)
           { topt_maximum_test_size
-            = Just 64
+            = Just 16
           }
       }
 

@@ -33,10 +33,11 @@ Library
   exposed-modules:
     Text.Parsec.Applicative
     Text.Parsec.Applicative.BNF
+    Text.Parsec.Applicative.Grammar
     Text.Parsec.Applicative.Internal
     Text.Parsec.Applicative.Types
-    Text.Parsec.Applicative.Util
   other-modules:
+    Example
   default-extensions:
     TupleSections
     GADTs
