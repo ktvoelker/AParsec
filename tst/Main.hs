@@ -11,12 +11,9 @@ import qualified Test
 tests :: [Test]
 tests =
   [ testGroup "Simple"
-    [ testProperty "Constant true" Test.prop_true
-    -- , testProperty "EOF matches only at the end" Test.prop_theEndIsTheEnd
-    -- , testProperty "Concatenation with (<*) and (*>)" Test.prop_skip
+    [ testProperty "EOF matches only at the end" Test.prop_theEndIsTheEnd
     , testProperty "Repeating a token" Test.prop_repeatToken
-    -- , testProperty "Repeating a token sequence" Test.prop_repeatTokens
-    -- , testProperty "Compare sequenceJust to reference" Test.prop_sequenceJust
+    , testProperty "Repeating a token sequence" Test.prop_repeatTokens
     ]
   ]
 

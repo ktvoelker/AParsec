@@ -53,7 +53,7 @@ arb rec n = oneof
   -- TODO generate real functions
   , PApp <$> ((*> pure id) <$> arb') <*> arb'
   , PTry <$> arb'
-  , PApp (pure mconcat) . PRepeat <$> arb'
+  , PApp (pure mconcat) . PRepeat <$> arb' `suchThat` (not . acceptEmpty . Ex)
   , bin PChoice
   -- TODO generate recursive parsers
   , PLabel "label" <$> arb'
