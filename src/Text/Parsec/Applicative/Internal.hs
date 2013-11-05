@@ -2,6 +2,7 @@
 module Text.Parsec.Applicative.Internal
   ( module Control.Applicative
   , module Text.Parsec.Applicative.Internal
+  , module Text.Parsec.Applicative.Types
   ) where
 
 import Control.Applicative
@@ -9,6 +10,7 @@ import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Lens
+import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Types
 
@@ -23,6 +25,7 @@ data Parser s tt td a where
   PFail   :: Maybe String -> Parser s tt td a
   PChoice :: Parser s tt td a -> Parser s tt td a -> Parser s tt td a
   PLabel  :: s -> Parser s tt td a -> Parser s tt td a
+  PGetPos :: (HasSourcePos td) => Parser s tt td SourcePos
 
 parens :: ShowS -> ShowS
 parens ss = ('(' :) . ss . (')' :)
@@ -45,6 +48,7 @@ instance (Show s, Show tt, Show td) => Show (Parser s tt td a) where
   showsPrec _ (PFail _)      = ("PFail" ++)
   showsPrec p (PChoice a b)  = listed [("PChoice" ++), showsPrec p a, showsPrec p b]
   showsPrec p (PLabel xs a ) = listed [("PLabel" ++), showsPrec p xs, showsPrec p a]
+  showsPrec _ PGetPos        = ("PGetPos" ++)
 
 instance Functor (Parser s tt td) where
   fmap = PApp . PConst
@@ -70,12 +74,19 @@ try = PTry
 
 label = PLabel
 
-data ParseError = ParseError
-  deriving (Eq, Show)
+data ParseErrorType = EUnexpected | EEnd | ENotEnd
+  deriving (Eq, Ord, Enum, Bounded, Show)
+
+data ParseError =
+  ParseError
+  { peType      :: Maybe ParseErrorType
+  , peMessage   :: Maybe T.Text
+  , peSourcePos :: Maybe SourcePos
+  } deriving (Eq, Show)
 
 instance Error ParseError where
-  noMsg    = ParseError
-  strMsg _ = ParseError
+  noMsg  = ParseError Nothing Nothing Nothing
+  strMsg = flip (ParseError Nothing) Nothing . Just . T.pack
 
 data ParserError =
     ERepeatEmpty
@@ -83,24 +94,24 @@ data ParserError =
   deriving (Eq, Show)
 
 parse
-  :: (Eq tt)
+  :: (Eq tt, HasSourcePos td)
   => Parser s tt td a -> [(tt, td)] -> Either ParseError a
 parse = (fst .) . parse'
 
 parse'
-  :: (Eq tt)
+  :: (Eq tt, HasSourcePos td)
   => Parser s tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
 parse' p = (\(x, s) -> (x, psTokens ^$ s)) . runM (mp p)
 
 runM
-  :: (Eq tt)
+  :: (Eq tt, HasSourcePos td)
   => M tt td a -> [(tt, td)] -> (Either ParseError a, ParseState tt td)
 runM m = runState (runErrorT m) . emptyParseState
 
-accept :: (Eq tt) => Parser s tt td a -> [(tt, td)] -> Bool
+accept :: (Eq tt, HasSourcePos td) => Parser s tt td a -> [(tt, td)] -> Bool
 accept = (either (const False) (const True) .) . parse
 
-accept' :: (Eq tt) => Parser s tt td a -> [(tt, td)] -> Maybe ParseError
+accept' :: (Eq tt, HasSourcePos td) => Parser s tt td a -> [(tt, td)] -> Maybe ParseError
 accept' = (either Just (const Nothing) .) . parse
 
 data Ex f = forall a. Ex (f a)
@@ -116,6 +127,7 @@ acceptEmpty (Ex (PRepeat _)) = True
 acceptEmpty (Ex (PFail _)) = False
 acceptEmpty (Ex (PChoice a b)) = any acceptEmpty [Ex a, Ex b]
 acceptEmpty (Ex (PLabel _ a)) = acceptEmpty (Ex a)
+acceptEmpty (Ex PGetPos) = True
 
 validate :: Parser s tt td a -> [(ParserError, String)]
 validate = execWriter . f
@@ -133,14 +145,15 @@ localConsumption p = do
 
 type M tt td = ErrorT ParseError (State (ParseState tt td))
 
-mp :: (Eq tt) => Parser s tt td a -> M tt td a
+mp :: (Eq tt, HasSourcePos td) => Parser s tt td a -> M tt td a
 mp PEnd = access psTokens >>= \case
   [] -> return ()
-  _ -> throwError ParseError
+  (_, td) : _ -> throwError . ParseError (Just ENotEnd) Nothing . Just . sourcePos $ td
 mp (PConst x) = return x
 mp (PToken exp) = access psTokens >>= \case
   t@(act, _) : ts | exp == act -> psTokens ~= ts >> return t
-  _ -> throwError ParseError
+  (_, td) : _ -> throwError . ParseError Nothing Nothing . Just . sourcePos $ td
+  _ -> throwError $ ParseError (Just EEnd) Nothing Nothing
 mp (PSkip p1 p2) = mp p1 >> mp p2
 mp (PApp f a) = mp f <*> mp a
 mp (PTry p) = do
@@ -160,4 +173,7 @@ mp (PChoice p1 p2) = do
     False -> mp p2
 -- TODO simplify error messages that bubble up through here
 mp (PLabel _ p) = mp p
+mp PGetPos = access psTokens >>= return . \case
+  [] -> noPos
+  (_, td) : _ -> sourcePos td
 

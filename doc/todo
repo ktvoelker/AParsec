@@ -2,6 +2,12 @@
 TO DO
 =====
 
+Improve error messages
+
+  Use non-terminal labels to simplify error messages
+
+Implement validations as described in doc/validation
+
 Write tests
 
   Write some properties
@@ -19,10 +25,4 @@ Enable compile-time validation via Template Haskell
 
   There should be a template that splices in an empty list of decls on success,
   or somehow provokes an error on failure
-
-Improve error messages
-
-Use non-terminal labels to simplify error messages
-
-Implement validations as described in doc/validation
 

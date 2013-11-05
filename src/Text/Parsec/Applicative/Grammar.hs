@@ -44,6 +44,7 @@ nonTerminals acc (PChoice p q) = nonTerminals (nonTerminals acc q) p
 nonTerminals acc (PLabel xs p) = case find ((== xs) . fst) acc of
   Nothing -> nonTerminals ((xs, pure () <* p) : acc) p
   Just _ -> acc
+nonTerminals acc PGetPos = acc
 
 parserToGrammar :: (Ord s) => Parser s tt td a -> Maybe (Grammar s tt)
 parserToGrammar p@(PLabel xs _) = Just (Grammar xs ps)
@@ -62,6 +63,11 @@ ce (PRepeat p)   = Repeat (ce p)
 ce (PFail xs)    = Fail xs
 ce (PChoice f p) = Choice [ce f, ce p]
 ce (PLabel xs _) = NonTerminal xs
+ce PGetPos       = Empty
+
+isFail :: Expr s t -> Bool
+isFail (Fail _) = True
+isFail _ = False
 
 flatten :: Expr s t -> Expr s t
 flatten e@End = e
@@ -72,13 +78,18 @@ flatten e@(Fail _) = e
 flatten e@(Sequence _) = case flattenSequence e of
   []  -> Empty
   [e] -> e
-  es  -> Sequence es
-flatten e@(Choice _) = case flattenChoice e of
+  es | any isFail es -> Fail Nothing
+     | otherwise     -> Sequence es
+flatten e@(Choice _) = case filter (not . isFail) $ flattenChoice e of
   []  -> Empty
   [e] -> e
   es  -> Choice es
-flatten (Repeat e) = Repeat $ flatten e
-flatten (Try e) = Try $ flatten e
+flatten (Repeat e) = case flatten e of
+  e@(Fail _) -> e
+  e          -> Repeat e
+flatten (Try e) = case flatten e of
+  e@(Fail _) -> e
+  e          -> Try e
 
 flattenSequence :: Expr s t -> [Expr s t]
 flattenSequence (Sequence es) = concatMap (flattenSequence . flatten) es

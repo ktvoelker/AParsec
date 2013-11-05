@@ -7,6 +7,9 @@ import Test.QuickCheck
 import Text.Parsec.Applicative
 import Text.Parsec.Applicative.Internal
 
+instance HasSourcePos () where
+  sourcePos = const noPos
+
 type Tokens = [(Sigma, Extra)]
 
 data Sigma = A | B | C deriving (Eq, Ord, Enum, Bounded, Show)
@@ -24,6 +27,9 @@ instance Monoid Extra where
   mappend F G = E
   mappend G F = E
   mappend G G = F
+
+instance HasSourcePos Extra where
+  sourcePos = const $ SourcePos Nothing (-1) (-1)
 
 instance Arbitrary Extra where
   arbitrary = arbitraryBoundedEnum
