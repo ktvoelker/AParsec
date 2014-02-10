@@ -14,8 +14,16 @@ module type TOKEN =
 
 module type PARSER =
   sig
-    type token
     type 'a t
+    type token
+    type token_kind
+    type error = {
+      position : Lexing.position option;
+      message  : string option;
+      expected : token_kind option;
+      actual   : token option;
+    }
+    exception Error of error
     val run : 'a t -> token list -> 'a
   end
 
