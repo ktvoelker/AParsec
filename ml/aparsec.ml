@@ -17,6 +17,7 @@ module type PARSER =
     type _ t
     type token
     type token_kind
+    type symbol
     type error = {
       position : Lexing.position option;
       message  : string option;
@@ -25,17 +26,33 @@ module type PARSER =
     }
     exception Error of error
     val run : 'a t -> token list -> 'a
+    val ( <$> ) : ('a -> 'b) -> 'a t -> 'b t
+    val pure : 'a -> 'a t
+    val ( <*> ) : ('a -> 'b) t -> 'a t -> 'b t
+    val ( <* ) : 'a t -> 'b t -> 'a t
+    val ( *> ) : 'a t -> 'b t -> 'b t
+    val empty : 'a t
+    val ( <|> ) : 'a t -> 'a t -> 'a t
+    val some : 'a t -> 'a list t
+    val many : 'a t -> 'a list t
+    val eof : unit t
+    val token : token_kind -> token t
+    val ptry : 'a t -> 'a t
+    val label : symbol -> 'a t -> 'a t
+    val position : Lexing.position t
   end
 
 module Parser (Tok : TOKEN) (Sym : SYMBOL) : PARSER =
   struct
     type token = Tok.t
     type token_kind = Tok.kind
+    type symbol = Sym.t
     type 'a t =
       | End    : unit t
       | Const  : 'a -> 'a t
       | Token  : Tok.kind -> Tok.t t
-      | Skip   : 'a t * 'b t -> 'b t
+      | LSkip  : 'a t * 'b t -> 'b t
+      | RSkip  : 'a t * 'b t -> 'a t
       | App    : ('a -> 'b) t * 'a t -> 'b t
       | Try    : 'a t -> 'a t
       | Repeat : 'a t -> ('a list) t
@@ -71,7 +88,7 @@ module Parser (Tok : TOKEN) (Sym : SYMBOL) : PARSER =
         then go (b :: tl) a (b - 1)
         else tl
       in go [] a b
-    let rec run : type a. a t -> token list -> a = fun p ts ->
+    let run : type a. a t -> token list -> a = fun p ts ->
       let stream = ref (List.combine (range 1 (List.length ts)) ts)
       in let fail exp msg =
         let base = error_of_stream !stream
@@ -84,7 +101,7 @@ module Parser (Tok : TOKEN) (Sym : SYMBOL) : PARSER =
         | End ->
           begin match !stream with
             | [] -> ()
-            | t :: _ -> fail None "Unexpected token"
+            | _ :: _ -> fail None "Unexpected token"
           end
         | Const x -> x
         | Token exp ->
@@ -95,7 +112,8 @@ module Parser (Tok : TOKEN) (Sym : SYMBOL) : PARSER =
               then (stream := ts; t)
               else fail (Some exp) "Unexpected token"
           end
-        | Skip (p1, p2) -> let _ = go p1 in go p2
+        | LSkip (p1, p2) -> let _ = go p1 in go p2
+        | RSkip (p1, p2) -> let ret = go p1 and _ = go p2 in ret
         | App (pf, pa) -> let f = go pf in f (go pa)
         | Try p ->
           let ts = !stream
@@ -128,5 +146,29 @@ module Parser (Tok : TOKEN) (Sym : SYMBOL) : PARSER =
             | (_, t) :: _ -> Tok.position t
           end
       in go p
+
+    (* Functor *)
+    let ( <$> ) f p = App (Const f, p)
+
+    (* Applicative *)
+    let pure x = Const x
+    let ( <*> ) p1 p2 = App (p1, p2)
+    let ( *> ) p1 p2 = LSkip (p1, p2)
+    let ( <* ) p1 p2 = RSkip (p1, p2)
+
+    (* Alternative *)
+    let empty = Fail None
+    let ( <|> ) p1 p2 = Choice (p1, p2)
+    let some p = App (App (Const (fun x xs -> x :: xs), p), Repeat p)
+    let many p = Repeat p
+
+    (* Miscellaneous *)
+    let eof = End
+    let token k = Token k
+    let ptry p = Try p
+    let label s p = Label (s, p)
+    let position = GetPos
   end
+
+module ParserAlternative (P : PARSER) : Applicative.ALTERNATIVE = P
 
