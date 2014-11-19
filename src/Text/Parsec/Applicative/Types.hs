@@ -42,6 +42,9 @@ data WithSourcePos a =
   , _wspSourcePos :: SourcePos
   } deriving (Eq, Ord, Show)
 
+instance HasSourcePos SourcePos where
+  sourcePos = id
+
 instance HasSourcePos (WithSourcePos a) where
   sourcePos = _wspSourcePos
 
