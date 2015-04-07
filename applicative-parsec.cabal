@@ -5,7 +5,7 @@ cabal-version:  >= 1.10
 build-type:     Simple
 license:        GPL-3
 license-file:   LICENSE
-copyright:      (c) 2013 Karl Voelker
+copyright:      (c) 2013-2015 Karl Voelker
 author:         Karl Voelker
 maintainer:     ktvoelker@gmail.com
 stability:      experimental
