@@ -17,7 +17,7 @@ module Text.Parsec.Applicative.Types
   , emptyParseState
   ) where
 
-import Data.Lens.Template
+import Control.Lens
 import qualified Data.Text as T
 
 data SourcePos =
@@ -26,6 +26,8 @@ data SourcePos =
   , _spLine   :: Integer
   , _spColumn :: Integer
   } deriving (Eq, Ord, Show)
+
+makeLenses ''SourcePos
 
 initialPos :: Maybe T.Text -> SourcePos
 initialPos name = SourcePos name 1 1
@@ -42,6 +44,8 @@ data WithSourcePos a =
   , _wspSourcePos :: SourcePos
   } deriving (Eq, Ord, Show)
 
+makeLenses ''WithSourcePos
+
 instance HasSourcePos SourcePos where
   sourcePos = id
 
@@ -54,8 +58,8 @@ data ParseState tt td =
   , _psTokens :: [(tt, td)]
   } deriving (Show)
 
+makeLenses ''ParseState
+
 emptyParseState :: (HasSourcePos td) => [(tt, td)] -> ParseState tt td
 emptyParseState = ParseState False
-
-makeLenses [''SourcePos, ''WithSourcePos, ''ParseState]
 

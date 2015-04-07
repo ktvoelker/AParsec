@@ -6,10 +6,10 @@ module Text.Parsec.Applicative.Internal
   ) where
 
 import Control.Applicative
-import Control.Monad.Error
+import Control.Lens
+import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Writer
-import Data.Lens
 import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Types
@@ -84,9 +84,11 @@ data ParseError =
   , peSourcePos :: Maybe SourcePos
   } deriving (Eq, Show)
 
-instance Error ParseError where
-  noMsg  = ParseError Nothing Nothing Nothing
-  strMsg = flip (ParseError Nothing) Nothing . Just . T.pack
+noMsg :: ParseError
+noMsg  = ParseError Nothing Nothing Nothing
+
+strMsg :: [Char] -> ParseError
+strMsg = flip (ParseError Nothing) Nothing . Just . T.pack
 
 data ParserError =
     ERepeatEmpty
@@ -101,12 +103,12 @@ parse = (fst .) . parse'
 parse'
   :: (Eq tt, HasSourcePos td)
   => Parser s tt td a -> [(tt, td)] -> (Either ParseError a, [(tt, td)])
-parse' p = (\(x, s) -> (x, psTokens ^$ s)) . runM (mp p)
+parse' p = (\(x, s) -> (x, s ^. psTokens)) . runM (mp p)
 
 runM
   :: (Eq tt, HasSourcePos td)
   => M tt td a -> [(tt, td)] -> (Either ParseError a, ParseState tt td)
-runM m = runState (runErrorT m) . emptyParseState
+runM m = runState (runExceptT m) . emptyParseState
 
 accept :: (Eq tt, HasSourcePos td) => Parser s tt td a -> [(tt, td)] -> Bool
 accept = (either (const False) (const True) .) . parse
@@ -138,20 +140,21 @@ infix 4 `accept`, `accept'`
 
 localConsumption :: M tt td a -> M tt td a
 localConsumption p = do
-  con <- psConsumed ~= False
+  con <- use psConsumed
+  assign psConsumed False
   ret <- p
-  _   <- psConsumed %= (|| con)
+  psConsumed %= (|| con)
   return ret
 
-type M tt td = ErrorT ParseError (State (ParseState tt td))
+type M tt td = ExceptT ParseError (State (ParseState tt td))
 
 mp :: (Eq tt, HasSourcePos td) => Parser s tt td a -> M tt td a
-mp PEnd = access psTokens >>= \case
+mp PEnd = use psTokens >>= \case
   [] -> return ()
   (_, td) : _ -> throwError . ParseError (Just ENotEnd) Nothing . Just . sourcePos $ td
 mp (PConst x) = return x
-mp (PToken exp) = access psTokens >>= \case
-  t@(act, _) : ts | exp == act -> psTokens ~= ts >> return t
+mp (PToken exp) = use psTokens >>= \case
+  t@(act, _) : ts | exp == act -> assign psTokens ts >> return t
   (_, td) : _ -> throwError . ParseError Nothing Nothing . Just . sourcePos $ td
   _ -> throwError $ ParseError (Just EEnd) Nothing Nothing
 mp (PSkip p1 p2) = mp p1 >> mp p2
@@ -167,13 +170,13 @@ mp (PFail (Just xs)) = throwError $ strMsg xs
 mp (PChoice p1 p2) = do
   localConsumption
   . catchError (mp p1)
-  $ \err -> access psConsumed >>= \case
+  $ \err -> use psConsumed >>= \case
     True  -> throwError err
     -- TODO if p2 throws an error, there might be some merging to do with p1's error
     False -> mp p2
 -- TODO simplify error messages that bubble up through here
 mp (PLabel _ p) = mp p
-mp PGetPos = access psTokens >>= return . \case
+mp PGetPos = use psTokens >>= return . \case
   [] -> noPos
   (_, td) : _ -> sourcePos td
 

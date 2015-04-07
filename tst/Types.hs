@@ -1,7 +1,6 @@
 
 module Types (module Text.Parsec.Applicative, module Types) where
 
-import Data.Monoid
 import Test.QuickCheck
 
 import Text.Parsec.Applicative

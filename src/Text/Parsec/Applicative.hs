@@ -22,7 +22,7 @@ module Text.Parsec.Applicative
   ) where
 
 import Control.Applicative
-import Data.Lens.Common
+import Control.Lens
 import Data.Traversable (Traversable(traverse, sequenceA), for, mapAccumL, mapAccumR)
 
 import Text.Parsec.Applicative.Internal
@@ -43,8 +43,8 @@ sepBy p delim = ((:) <$> p <*> many (delim *> p)) <|> empty
 updatePosString :: SourcePos -> String -> SourcePos
 updatePosString = foldr f
   where
-    f '\n' = (spColumn ^= 0) . (spLine ^%= (+ 1))
-    f _ = spColumn ^%= (+ 1)
+    f '\n' = (set spColumn 0) . (over spLine (+ 1))
+    f _ = over spColumn (+ 1)
 
 getPosition :: (HasSourcePos td) => Parser s tt td SourcePos
 getPosition = PGetPos

@@ -1,7 +1,6 @@
 
 module Main where
 
-import Data.Monoid
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import System.Environment
