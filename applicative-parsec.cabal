@@ -5,21 +5,30 @@ cabal-version:  >= 1.10
 build-type:     Simple
 license:        GPL-3
 license-file:   LICENSE
-copyright:      (c) 2013-2015 Karl Voelker
+copyright:      Copyright 2013-2015 Karl Voelker
 author:         Karl Voelker
-maintainer:     ktvoelker@gmail.com
+maintainer:     aparsec@karlv.net
 stability:      experimental
-bug-reports:    mailto:ktvoelker@gmail.com
-synopsis:       AParsec
+homepage:       https://www.github.com/ktvoelker/AParsec
+bug-reports:    mailto:aparsec@karlv.net
+synopsis:       An applicative parser combinator library
+description:
+  The goal of this library is to take advantage of the power of applicatives to
+  provide not only a parser combinator library, but grammar analysis and
+  validation tools. Right now, those tools are minimal, but do include a BNF
+  generator.
 category:       Language
 tested-with:    GHC == 7.10.1
+
+Source-repository head
+  type: git
+  location: https://github.com/ktvoelker/AParsec.git
 
 Library
   default-language: Haskell2010
   hs-source-dirs: src
   ghc-options:
     -Wall
-    -Werror
     -fno-warn-name-shadowing
     -fno-warn-missing-signatures
     -fno-warn-orphans
@@ -52,6 +61,9 @@ Test-Suite test
   default-language: Haskell2010
   hs-source-dirs: tst
   main-is: Main.hs
+  other-modules:
+    Test
+    Types
   ghc-options:
     -Wall
     -Werror
