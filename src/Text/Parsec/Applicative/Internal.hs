@@ -14,6 +14,8 @@ import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Types
 
+import Debug.Trace
+
 data Parser s tt td a where
   PEnd    :: Parser s tt td ()
   PConst  :: a -> Parser s tt td a
@@ -154,7 +156,10 @@ mp PEnd = use psTokens >>= \case
   (_, td) : _ -> throwError . ParseError (Just ENotEnd) Nothing . Just . sourcePos $ td
 mp (PConst x) = return x
 mp (PToken exp) = use psTokens >>= \case
-  t@(act, _) : ts | exp == act -> assign psTokens ts >> return t
+  t@(act, _) : ts | exp == act -> do
+    assign psConsumed True
+    assign psTokens ts
+    return t
   (_, td) : _ -> throwError . ParseError Nothing Nothing . Just . sourcePos $ td
   _ -> throwError $ ParseError (Just EEnd) Nothing Nothing
 mp (PSkip p1 p2) = mp p1 >> mp p2
