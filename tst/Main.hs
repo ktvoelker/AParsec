@@ -13,6 +13,12 @@ tests =
     [ testProperty "EOF matches only at the end" Test.prop_theEndIsTheEnd
     , testProperty "Repeating a token" Test.prop_repeatToken
     , testProperty "Repeating a token sequence" Test.prop_repeatTokens
+    , testProperty
+      "Repeating a token sequence with incomplete last repetition"
+      Test.prop_repeatTokensFailure
+    , testProperty
+      "Choice where the first branch fails after consuming input"
+      Test.prop_firstChoiceConsumeFail 
     ]
   ]
 

@@ -2,6 +2,17 @@
 TO DO
 =====
 
+Fix "many"
+
+  When the failing iteration consumed input, it should fail
+
+  Write better tests for "many" to make sure the problem is actually understood
+
+    There might be something funky with eof being ignored
+
+  The old definition of PRepeat was based on PChoice and should have properly handled
+  the error, so it might be PChoice that was broken
+
 Improve error messages
 
   Use non-terminal labels to simplify error messages
