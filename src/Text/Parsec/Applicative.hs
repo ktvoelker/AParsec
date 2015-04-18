@@ -5,6 +5,7 @@ module Text.Parsec.Applicative
   , module Text.Parsec.Applicative.Types
   , Parser()
   , ParseError(..)
+  , ParseErrorType(..)
   , eof
   , token
   , try
