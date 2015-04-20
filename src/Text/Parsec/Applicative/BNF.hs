@@ -2,38 +2,51 @@
 module Text.Parsec.Applicative.BNF where
 
 import qualified Data.Map as Map
+import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Grammar
 import Text.Parsec.Applicative.Internal
 
-newtype BNF = BNF { showsPrecBNF :: Int -> ShowS }
+newtype BNF = BNF { bnfShowsBNF :: ShowS }
+
+class ShowBNF a where
+  showsBNF :: a -> String -> String
+
+instance ShowBNF BNF where
+  showsBNF = bnfShowsBNF
+
+instance ShowBNF String where
+  showsBNF xs = (xs ++)
+
+instance ShowBNF T.Text where
+  showsBNF xs = (T.unpack xs ++)
+
+instance ShowBNF () where
+  showsBNF = const id
 
 instance Show BNF where
-  showsPrec n bnf = showsPrecBNF bnf n
+  showsPrec _ = showsBNF
 
-grammarToBNF :: (Show s, Show t) => Grammar s t -> BNF
-grammarToBNF = BNF . const . showsGrammarBNF
+grammarToBNF :: (ShowBNF s, ShowBNF t) => Grammar s t -> BNF
+grammarToBNF = BNF . showsGrammarBNF
 
-parserToBNF :: (Show s, Show tt, Ord s) => Parser s tt td a -> Maybe BNF
+parserToBNF :: (ShowBNF s, ShowBNF tt, Ord s) => Parser s tt td a -> Maybe BNF
 parserToBNF = fmap grammarToBNF . parserToGrammar
 
-showsGrammarBNF :: (Show s, Show t) => Grammar s t -> ShowS
-showsGrammarBNF (Grammar start prods) = showsBNFStart start . showsBNFProds prods
+showsGrammarBNF :: (ShowBNF s, ShowBNF t) => Grammar s t -> ShowS
+showsGrammarBNF (Grammar _ prods) = showsBNFProds prods
 
-showsBNFStart :: (Show s) => s -> ShowS
-showsBNFStart xs = shows xs . ("\n" ++)
-
-showsBNFProds :: (Show s, Show t) => Map.Map s (Expr s t) -> ShowS
+showsBNFProds :: (ShowBNF s, ShowBNF t) => Map.Map s (Expr s t) -> ShowS
 showsBNFProds =
   flip (showsSepBy True) ("\n" ++)
-  . map (\(n, e) -> shows n . (" := " ++) . showsBNFExp True e)
+  . map (\(n, e) -> showsBNF n . (" := " ++) . showsBNFExp True e)
   . Map.toList
 
-showsBNFExp :: (Show s, Show t) => Bool -> Expr s t -> ShowS
+showsBNFExp :: (ShowBNF s, ShowBNF t) => Bool -> Expr s t -> ShowS
 showsBNFExp _ End = ("<End>" ++)
 showsBNFExp _ Empty = ("ε" ++)
-showsBNFExp _ (Terminal t) = shows t
-showsBNFExp _ (NonTerminal xs) = shows xs
+showsBNFExp _ (Terminal t) = showsBNF t
+showsBNFExp _ (NonTerminal xs) = showsBNF xs
 showsBNFExp safe (Sequence es) = showsSepBy safe (map (showsBNFExp False) es) (" " ++)
 showsBNFExp safe (Choice es) = showsSepBy safe (map (showsBNFExp True) es) (" | " ++)
 showsBNFExp _ (Repeat e) = showsBNFExp False e . ("*" ++)

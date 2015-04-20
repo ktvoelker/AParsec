@@ -2,6 +2,10 @@
 TO DO
 =====
 
+Improve BNF output
+
+  Create a ToBNF class and use it instead of Show
+
 Improve error messages
 
   Use non-terminal labels to simplify error messages

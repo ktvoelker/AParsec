@@ -53,6 +53,8 @@ Library
     StandaloneDeriving
     LambdaCase
     ScopedTypeVariables
+    TypeSynonymInstances
+    FlexibleInstances
   other-extensions:
     TemplateHaskell
 

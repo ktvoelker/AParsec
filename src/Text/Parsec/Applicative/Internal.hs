@@ -14,8 +14,6 @@ import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Types
 
-import Debug.Trace
-
 data Parser s tt td a where
   PEnd    :: Parser s tt td ()
   PConst  :: a -> Parser s tt td a

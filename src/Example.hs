@@ -10,6 +10,9 @@ import Text.Parsec.Applicative.BNF
 data TT = TTInt | TTPlus | TTMult | TTLP | TTRP
   deriving (Eq, Enum, Bounded)
 
+instance ShowBNF TT where
+  showsBNF = shows
+
 instance Show TT where
   showsPrec _ TTInt  = ("INT" ++)
   showsPrec _ TTPlus = ("'+'" ++)
