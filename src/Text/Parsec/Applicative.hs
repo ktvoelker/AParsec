@@ -37,8 +37,8 @@ between l r m = l *> m <* r
 choice :: (Alternative f) => [f a] -> f a
 choice = foldr (<|>) empty
 
-option :: (Alternative f) => a -> f a -> f a
-option = flip (<|>) . pure
+option :: (Alternative f) => f a -> f (Maybe a)
+option p = (Just <$> p) <|> pure Nothing
 
 sepBy :: (Alternative f) => f a -> f b -> f [a]
 sepBy p delim = ((:) <$> p <*> many (delim *> p)) <|> empty
