@@ -6,8 +6,10 @@ module Text.Parsec.Applicative
   , Parser()
   , ParseError(..)
   , ParseErrorType(..)
+  , predicate
   , eof
   , token
+  , token'
   , try
   , label
   , parse

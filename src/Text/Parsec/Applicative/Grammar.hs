@@ -15,7 +15,7 @@ data Grammar s t =
 data Expr s t =
     End
   | Empty
-  | Terminal t
+  | Terminal t (Maybe s)
   | NonTerminal s
   | Sequence [Expr s t]
   | Choice [Expr s t]
@@ -34,7 +34,7 @@ nonTerminals
   -> [(s, Parser s tt td ())]
 nonTerminals acc PEnd = acc
 nonTerminals acc (PConst _) = acc
-nonTerminals acc (PToken _) = acc
+nonTerminals acc (PToken _ _) = acc
 nonTerminals acc (PSkip _ p) = nonTerminals acc p
 nonTerminals acc (PApp f p) = nonTerminals (nonTerminals acc p) f
 nonTerminals acc (PTry p) = nonTerminals acc p
@@ -55,7 +55,7 @@ parserToGrammar _ = Nothing
 ce :: Parser s tt td a -> Expr s tt
 ce PEnd          = End
 ce (PConst _)    = Empty
-ce (PToken t)    = Terminal t
+ce (PToken t p)  = Terminal t (fmap predicateLabel p)
 ce (PSkip p q)   = Sequence [ce p, ce q]
 ce (PApp f p)    = Sequence [ce f, ce p]
 ce (PTry p)      = Try (ce p)
@@ -72,7 +72,7 @@ isFail _ = False
 flatten :: Expr s t -> Expr s t
 flatten e@End = e
 flatten e@Empty = e
-flatten e@(Terminal _) = e
+flatten e@(Terminal _ _) = e
 flatten e@(NonTerminal _) = e
 flatten e@(Fail _) = e
 flatten e@(Sequence _) = case flattenSequence e of

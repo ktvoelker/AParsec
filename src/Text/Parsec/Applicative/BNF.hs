@@ -42,10 +42,13 @@ showsBNFProds =
   . map (\(n, e) -> showsBNF n . (" := " ++) . showsBNFExp True e)
   . Map.toList
 
+showsBNFPredicate :: (ShowBNF s) => s -> ShowS
+showsBNFPredicate p = ("[" ++) . (showsBNF p) . ("]" ++)
+
 showsBNFExp :: (ShowBNF s, ShowBNF t) => Bool -> Expr s t -> ShowS
 showsBNFExp _ End = ("<End>" ++)
 showsBNFExp _ Empty = ("ε" ++)
-showsBNFExp _ (Terminal t) = showsBNF t
+showsBNFExp _ (Terminal t s) = showsBNF t . (maybe id showsBNFPredicate s)
 showsBNFExp _ (NonTerminal xs) = showsBNF xs
 showsBNFExp safe (Sequence es) = showsSepBy safe (map (showsBNFExp False) es) (" " ++)
 showsBNFExp safe (Choice es) = showsSepBy safe (map (showsBNFExp True) es) (" | " ++)

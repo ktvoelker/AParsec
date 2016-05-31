@@ -7,6 +7,7 @@ module Text.Parsec.Applicative.Internal
 
 import Control.Applicative
 import Control.Lens
+import Data.Maybe
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Writer
@@ -14,10 +15,16 @@ import qualified Data.Text as T
 
 import Text.Parsec.Applicative.Types
 
+data Predicate s td =
+  Predicate
+  { predicateLabel    :: s
+  , predicateFunction :: td -> Bool
+  }
+
 data Parser s tt td a where
   PEnd    :: Parser s tt td ()
   PConst  :: a -> Parser s tt td a
-  PToken  :: tt -> Parser s tt td (tt, td)
+  PToken  :: tt -> Maybe (Predicate s td) -> Parser s tt td (tt, td)
   PSkip   :: Parser s tt td a -> Parser s tt td b -> Parser s tt td b
   PApp    :: Parser s tt td (a -> b) -> Parser s tt td a -> Parser s tt td b
   PTry    :: Parser s tt td a -> Parser s tt td a
@@ -40,7 +47,10 @@ map1 f (x : xs) = x : map f xs
 instance (Show s, Show tt, Show td) => Show (Parser s tt td a) where
   showsPrec _ PEnd           = ("PEnd" ++)
   showsPrec _ (PConst _)     = ("PConst" ++)
-  showsPrec p (PToken t)     = listed [("PToken" ++), showsPrec p t]
+  showsPrec p (PToken t pr)  =
+    listed
+      $ [("PToken" ++), showsPrec p t]
+      ++ maybeToList (fmap (const $ ("undefined" ++)) pr)
   showsPrec p (PSkip a b)    = listed [("PSkip" ++), showsPrec p a, showsPrec p b]
   showsPrec p (PApp a b)     = listed [("PApp" ++), showsPrec p a, showsPrec p b]
   showsPrec p (PTry a)       = listed [("PTry" ++), showsPrec p a]
@@ -64,11 +74,17 @@ instance Alternative (Parser s tt td) where
   some p = PApp (PApp (pure (:)) p) (PRepeat p)
   many p = PRepeat p
 
+predicate :: s -> (td -> Bool) -> Predicate s td
+predicate = Predicate
+
 eof :: Parser s tt td ()
 eof = PEnd
 
 token :: (Eq tt) => tt -> Parser s tt td (tt, td)
-token = PToken
+token = flip PToken Nothing
+
+token' :: (Eq tt) => tt -> Predicate s td -> Parser s tt td (tt, td)
+token' tt = PToken tt . Just
 
 try = PTry
 
@@ -121,7 +137,7 @@ data Ex f = forall a. Ex (f a)
 acceptEmpty :: Ex (Parser s tt td) -> Bool
 acceptEmpty (Ex PEnd) = True
 acceptEmpty (Ex (PConst _)) = True
-acceptEmpty (Ex (PToken _)) = False
+acceptEmpty (Ex (PToken _ _)) = False
 acceptEmpty (Ex (PSkip a b)) = all acceptEmpty [Ex a, Ex b]
 acceptEmpty (Ex (PApp a b)) = all acceptEmpty [Ex a, Ex b]
 acceptEmpty (Ex (PTry a)) = acceptEmpty (Ex a)
@@ -148,13 +164,18 @@ localConsumption p = do
 
 type M tt td = ExceptT ParseError (State (ParseState tt td))
 
+evalPred :: Maybe (Predicate s td) -> td -> Bool
+evalPred p x = case p of
+  Nothing -> True
+  Just (Predicate _ f) -> f x
+
 mp :: (Eq tt, HasSourcePos td) => Parser s tt td a -> M tt td a
 mp PEnd = use psTokens >>= \case
   [] -> return ()
   (_, td) : _ -> throwError . ParseError (Just ENotEnd) Nothing . Just . sourcePos $ td
 mp (PConst x) = return x
-mp (PToken exp) = use psTokens >>= \case
-  t@(act, _) : ts | exp == act -> do
+mp (PToken exp pred) = use psTokens >>= \case
+  t@(act, td) : ts | exp == act && evalPred pred td -> do
     assign psConsumed True
     assign psTokens ts
     return t

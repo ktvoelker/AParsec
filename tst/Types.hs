@@ -50,7 +50,7 @@ arb :: Bool -> Int -> Gen P
 arb _ 0 = oneof
   [ (PEnd *>) . PConst <$> arbitrary
   , PConst <$> arbitrary
-  , PApp (pure snd) . PToken <$> arbitrary
+  , PApp (pure snd) . flip PToken Nothing <$> arbitrary
   , return $ PFail $ Just "arbitrary"
   ]
 arb rec n = oneof
