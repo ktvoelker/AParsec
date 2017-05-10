@@ -1,4 +1,3 @@
-
 module Text.Parsec.Applicative.BNF where
 
 import qualified Data.Map as Map

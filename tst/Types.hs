@@ -1,4 +1,3 @@
-
 module Types (module Text.Parsec.Applicative, module Types) where
 
 import Test.QuickCheck

@@ -1,4 +1,3 @@
-
 module Text.Parsec.Applicative
   ( module Control.Applicative
   , module Data.Traversable
@@ -25,8 +24,8 @@ module Text.Parsec.Applicative
   ) where
 
 import Control.Applicative
-import Control.Lens
 import Data.Traversable (Traversable(traverse, sequenceA), for, mapAccumL, mapAccumR)
+import Lens.Micro
 
 import Text.Parsec.Applicative.Internal
 import Text.Parsec.Applicative.Types

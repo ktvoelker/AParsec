@@ -1,4 +1,3 @@
-
 module Text.Parsec.Applicative.Grammar where
 
 import Data.List

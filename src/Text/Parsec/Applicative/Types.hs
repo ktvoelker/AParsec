@@ -1,4 +1,3 @@
-
 {-# LANGUAGE TemplateHaskell #-}
 module Text.Parsec.Applicative.Types
   ( SourcePos(SourcePos)
@@ -17,8 +16,8 @@ module Text.Parsec.Applicative.Types
   , emptyParseState
   ) where
 
-import Control.Lens
 import qualified Data.Text as T
+import Lens.Micro.TH
 
 data SourcePos =
   SourcePos

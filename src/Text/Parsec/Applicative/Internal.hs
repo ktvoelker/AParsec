@@ -1,4 +1,3 @@
-
 module Text.Parsec.Applicative.Internal
   ( module Control.Applicative
   , module Text.Parsec.Applicative.Internal
@@ -6,12 +5,13 @@ module Text.Parsec.Applicative.Internal
   ) where
 
 import Control.Applicative
-import Control.Lens
 import Data.Maybe
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Writer
 import qualified Data.Text as T
+import Lens.Micro
+import Lens.Micro.Mtl
 
 import Text.Parsec.Applicative.Types
 
